@@ -80,7 +80,8 @@ docker run --rm \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
-  -e KERYX_GPU_PRESETS_URL=https://example.com/keryx-gpu-presets.csv \
+  -e KERYX_GPU_PRESETS_URL=https://raw.githubusercontent.com/JoEasyCompute/keryx-miner-docker/main/examples/gpu-presets.csv \
+  -e KERYX_GPU_PRESETS_SHA256=f5af787dde5e8558c13db2202c5c0b63de6d68b74ce647288fd77c5b87debab6 \
   -e KERYX_GPU_PRESETS_DRY_RUN=true \
   ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION}
 ```
@@ -105,8 +106,8 @@ docker run -d --restart unless-stopped --gpus all \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
-  -e KERYX_GPU_PRESETS_URL=https://example.com/keryx-gpu-presets.csv \
-  -e KERYX_GPU_PRESETS_SHA256=<optional_csv_sha256> \
+  -e KERYX_GPU_PRESETS_URL=https://raw.githubusercontent.com/JoEasyCompute/keryx-miner-docker/main/examples/gpu-presets.csv \
+  -e KERYX_GPU_PRESETS_SHA256=f5af787dde5e8558c13db2202c5c0b63de6d68b74ce647288fd77c5b87debab6 \
   -e KERYX_GPU_PRESETS_DRY_RUN=true \
   ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION}
 ```
@@ -134,7 +135,8 @@ docker run -d --restart unless-stopped \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
-  -e KERYX_GPU_PRESETS_URL=https://example.com/keryx-gpu-presets.csv \
+  -e KERYX_GPU_PRESETS_URL=https://raw.githubusercontent.com/JoEasyCompute/keryx-miner-docker/main/examples/gpu-presets.csv \
+  -e KERYX_GPU_PRESETS_SHA256=f5af787dde5e8558c13db2202c5c0b63de6d68b74ce647288fd77c5b87debab6 \
   -e KERYX_GPU_PRESETS_DRY_RUN=true \
   ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION}
 ```
@@ -230,10 +232,13 @@ file at startup and apply the first row matching each GPU name from
 Enable a remote CSV:
 
 ```env
-KERYX_GPU_PRESETS_URL=https://example.com/keryx-gpu-presets.csv
-KERYX_GPU_PRESETS_SHA256=
+KERYX_GPU_PRESETS_URL=https://raw.githubusercontent.com/JoEasyCompute/keryx-miner-docker/main/examples/gpu-presets.csv
+KERYX_GPU_PRESETS_SHA256=f5af787dde5e8558c13db2202c5c0b63de6d68b74ce647288fd77c5b87debab6
 KERYX_GPU_PRESETS_DRY_RUN=true
 ```
+
+The URL above points at the example CSV committed in this repository:
+[examples/gpu-presets.csv](examples/gpu-presets.csv).
 
 Or mount a local CSV:
 
