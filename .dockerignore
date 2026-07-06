@@ -1,0 +1,7 @@
+.git
+.omx
+.firecrawl
+.env
+target
+target-cuda
+*.log

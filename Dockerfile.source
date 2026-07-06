@@ -1,0 +1,61 @@
+ARG CUDA_VERSION=12.2.2
+ARG UBUNTU_VERSION=22.04
+ARG KERYX_IMAGE_PLATFORM=linux/amd64
+
+FROM --platform=${KERYX_IMAGE_PLATFORM} nvidia/cuda:${CUDA_VERSION}-devel-ubuntu${UBUNTU_VERSION} AS builder
+
+ARG KERYX_MINER_REPO=https://github.com/Keryx-Labs/keryx-miner.git
+ARG KERYX_MINER_REF=v0.3.5-OPoI
+ARG CUDA_COMPUTE_CAP=89
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    CARGO_HOME=/usr/local/cargo \
+    RUSTUP_HOME=/usr/local/rustup \
+    PATH=/usr/local/cargo/bin:/usr/local/cuda/bin:$PATH \
+    CUDA_PATH=/usr/local/cuda \
+    CUDA_ROOT=/usr/local/cuda \
+    PROTOC=/usr/bin/protoc \
+    CUDA_COMPUTE_CAP=${CUDA_COMPUTE_CAP}
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
+        git \
+        libssl-dev \
+        pkg-config \
+        protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | sh -s -- -y --profile minimal
+
+WORKDIR /src
+
+RUN git clone --depth 1 --branch "${KERYX_MINER_REF}" "${KERYX_MINER_REPO}" .
+
+RUN cargo build --release --bin keryx-miner \
+    && install -D -m 0755 target/release/keryx-miner /opt/keryx/bin/keryx-miner
+
+FROM --platform=${KERYX_IMAGE_PLATFORM} nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_VERSION} AS runtime
+
+ENV NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility \
+    LD_LIBRARY_PATH=/opt/keryx/lib:$LD_LIBRARY_PATH \
+    PATH=/opt/keryx/bin:$PATH
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/keryx/bin/keryx-miner /opt/keryx/bin/keryx-miner
+COPY docker-entrypoint.sh /usr/local/bin/keryx-entrypoint
+COPY gpu-tune.sh /usr/local/bin/keryx-gpu-tune
+COPY gpu-presets.sh /opt/keryx/gpu-presets.sh
+COPY examples/gpu-presets.csv /etc/keryx/gpu-presets.example.csv
+
+ENTRYPOINT ["keryx-entrypoint"]

@@ -1,0 +1,4 @@
+enabled,algorithm,gpu_name_contains,power_limit_w,lock_core_clock_mhz,core_clock_offset_mhz,lock_memory_clock_mhz,memory_clock_offset_mhz,fan_speed_pct,delay_before_apply_s
+true,keryx,RTX 5090,400,2490,200,7000,,,0
+true,keryx,RTX 4090,360,2400,,7000,,,0
+true,keryx,RTX 6000 Ada,300,2200,,7000,,,0
