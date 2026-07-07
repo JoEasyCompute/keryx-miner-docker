@@ -10,12 +10,18 @@ services:
     platform: linux/amd64
     restart: unless-stopped
     environment:
+      KERYXD_APPDIR: ${KERYXD_APPDIR:-/data}
+      KERYXD_RPCLISTEN: ${KERYXD_RPCLISTEN:-0.0.0.0:22110}
+      KERYXD_LISTEN: ${KERYXD_LISTEN:-0.0.0.0:22111}
+      KERYXD_LOG_LEVEL: ${KERYXD_LOG_LEVEL:-info}
       KERYXD_EXTRA_ARGS: ${KERYXD_EXTRA_ARGS:-}
     volumes:
       - keryx-node-data:/data
     ports:
       - "${KERYX_NODE_GRPC_PORT:-22110}:22110"
-      - "${KERYX_NODE_TESTNET_GRPC_PORT:-22211}:22211"
+      - "${KERYX_NODE_P2P_PORT:-22111}:22111"
+      - "${KERYX_NODE_TESTNET_GRPC_PORT:-22210}:22210"
+      - "${KERYX_NODE_TESTNET_P2P_PORT:-22211}:22211"
 
 volumes:
   keryx-node-data:

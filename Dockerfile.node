@@ -36,6 +36,9 @@ RUN cargo build --release --bin keryxd \
 FROM debian:${DEBIAN_VERSION}-slim AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive \
+    KERYXD_APPDIR=/data \
+    KERYXD_RPCLISTEN=0.0.0.0:22110 \
+    KERYXD_LISTEN=0.0.0.0:22111 \
     PATH=/opt/keryx-node/bin:$PATH
 
 RUN apt-get update \
@@ -53,6 +56,6 @@ RUN chmod +x /usr/local/bin/keryxd-entrypoint \
 WORKDIR /data
 VOLUME ["/data"]
 
-EXPOSE 22110 22211
+EXPOSE 22110 22111 22210 22211
 
 ENTRYPOINT ["keryxd-entrypoint"]

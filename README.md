@@ -192,9 +192,12 @@ docker compose -f docker-compose.node.yml up -d --build
 docker compose -f docker-compose.node.yml logs -f keryx-node
 ```
 
-The node compose file persists data in the `keryx-node-data` volume and exposes
-mainnet gRPC on host port `22110`. If the node runs in another network, expose
-that port only to your GPU servers.
+The node compose file persists data in the `keryx-node-data` volume. By default
+it binds `keryxd` to `0.0.0.0:22110` for mainnet gRPC and `0.0.0.0:22111` for
+mainnet P2P. It also maps testnet gRPC/P2P ports `22210` and `22211` for
+operators who enable testnet through `KERYXD_EXTRA_ARGS=--testnet`. If the node
+runs in another network, expose only the needed ports to your GPU servers and
+peers.
 
 ### Optional Stratum Bridge
 
