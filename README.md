@@ -77,6 +77,7 @@ docker run --rm \
   --runtime=runc \
   --device nvidia.com/gpu=all \
   --name keryx-miner \
+  -v keryx-data:/data \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
@@ -103,6 +104,7 @@ docker rm -f keryx-miner 2>/dev/null || true
 
 docker run -d --restart unless-stopped --gpus all \
   --name keryx-miner \
+  -v keryx-data:/data \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
@@ -132,6 +134,7 @@ KERYX_MINER_VERSION=v0.3.5-OPoI
 docker run -d --restart unless-stopped \
   --gpus '"device=0,1,2,3,4,5,7"' \
   --name keryx-miner \
+  -v keryx-data:/data \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
@@ -164,6 +167,9 @@ Stop mining:
 ```sh
 docker compose down
 ```
+
+The image uses `/data` for persistent runtime state. Keep a volume mounted there
+so OPoI model downloads and `escrow.key` survive container recreation.
 
 ## Runtime Configuration
 

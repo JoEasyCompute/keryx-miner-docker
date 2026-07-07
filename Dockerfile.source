@@ -58,4 +58,11 @@ COPY gpu-tune.sh /usr/local/bin/keryx-gpu-tune
 COPY gpu-presets.sh /opt/keryx/gpu-presets.sh
 COPY examples/gpu-presets.csv /etc/keryx/gpu-presets.example.csv
 
+RUN mkdir -p /data \
+    && rm -rf /opt/keryx/bin/models \
+    && ln -s /data/models /opt/keryx/bin/models
+
+WORKDIR /data
+VOLUME ["/data"]
+
 ENTRYPOINT ["keryx-entrypoint"]

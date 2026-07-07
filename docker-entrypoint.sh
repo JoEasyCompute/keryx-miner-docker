@@ -19,6 +19,8 @@ if [ -z "${MINING_ADDRESS:-}" ]; then
   exit 64
 fi
 
+mkdir -p /data/models
+
 keryx-gpu-tune
 
 set -- --mining-address "$MINING_ADDRESS"
