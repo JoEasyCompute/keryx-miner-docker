@@ -311,6 +311,24 @@ docker compose -f docker-compose.control.yml up -d --build
 docker compose -f docker-compose.control.yml logs -f keryx-node keryx-bridge
 ```
 
+By default, node chain data is stored in the Docker volume
+`keryx-node-data`. That survives container recreation on the same Docker host,
+so `docker rm -f keryx-node` or `docker compose up -d` will not force a full
+resync as long as you do not remove the volume.
+
+For production control nodes, put `/data` on an attached persistent disk or a
+pre-created external volume:
+
+```sh
+mkdir -p /mnt/keryx-node-data
+KERYX_NODE_DATA_SOURCE=/mnt/keryx-node-data \
+docker compose -f docker-compose.control.yml up -d --build
+```
+
+Use the same `KERYX_NODE_DATA_SOURCE` value whenever you recreate that control
+node. If you move to a new host, copy or restore this directory or volume first
+to avoid syncing from scratch.
+
 The control host publishes:
 
 | Port | Service | Purpose |
@@ -351,6 +369,47 @@ mainnet P2P. It also maps testnet gRPC/P2P ports `22210` and `22211` for
 operators who enable testnet through `KERYXD_EXTRA_ARGS=--testnet`. If the node
 runs in another network, expose only the needed ports to your GPU servers and
 peers.
+
+To use an explicit host directory instead of the default named volume:
+
+```sh
+mkdir -p /mnt/keryx-node-data
+KERYX_NODE_DATA_SOURCE=/mnt/keryx-node-data \
+docker compose -f docker-compose.node.yml up -d --build
+```
+
+### Node Data Backup And Restore
+
+Stop the node before backing up or restoring chain data so the database is
+consistent:
+
+```sh
+docker rm -f keryx-node
+```
+
+Back up the default Docker volume:
+
+```sh
+docker run --rm \
+  -v keryx-node-data:/data:ro \
+  -v "$PWD:/backup" \
+  ubuntu:22.04 \
+  tar -C /data -czf /backup/keryx-node-data.tgz .
+```
+
+Restore it on another host:
+
+```sh
+docker volume create keryx-node-data
+docker run --rm \
+  -v keryx-node-data:/data \
+  -v "$PWD:/backup" \
+  ubuntu:22.04 \
+  tar -C /data -xzf /backup/keryx-node-data.tgz
+```
+
+For bind-mounted storage, back up and restore the host directory you use as
+`KERYX_NODE_DATA_SOURCE`, for example `/mnt/keryx-node-data`.
 
 ### Optional Stratum Bridge
 

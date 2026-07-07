@@ -16,7 +16,7 @@ services:
       KERYXD_LOG_LEVEL: ${KERYXD_LOG_LEVEL:-info}
       KERYXD_EXTRA_ARGS: ${KERYXD_EXTRA_ARGS:-}
     volumes:
-      - keryx-node-data:/data
+      - ${KERYX_NODE_DATA_SOURCE:-keryx-node-data}:/data
     ports:
       - "${KERYX_NODE_GRPC_PORT:-22110}:22110"
       - "${KERYX_NODE_P2P_PORT:-22111}:22111"
