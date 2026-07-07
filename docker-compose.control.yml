@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.node
       args:
         KERYX_NODE_REPO: ${KERYX_NODE_REPO:-https://github.com/Keryx-Labs/keryx-node.git}
-        KERYX_NODE_REF: ${KERYX_NODE_REF:-master}
+        KERYX_NODE_REF: ${KERYX_NODE_REF:-v1.3.1-OPoI}
     image: ${KERYX_NODE_IMAGE:-keryx-node:local}
     platform: linux/amd64
     restart: unless-stopped

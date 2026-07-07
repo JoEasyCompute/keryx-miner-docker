@@ -29,7 +29,7 @@ set -- \
   --escrow-state-file "${KERYX_ESCROW_STATE_FILE:-/data/escrow_state.json}"
 
 if [ "${KERYX_NO_OPOI:-}" = "1" ] || [ "${KERYX_NO_OPOI:-}" = "true" ]; then
-  echo "KERYX_NO_OPOI is not supported by keryx-miner v0.3.5-OPoI; this release has no --no-opoi flag." >&2
+  echo "KERYX_NO_OPOI is not supported by this keryx-miner OPoI release; there is no --no-opoi flag." >&2
   exit 64
 fi
 

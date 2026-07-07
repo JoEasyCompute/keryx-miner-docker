@@ -1,6 +1,6 @@
 ARG DEBIAN_VERSION=bookworm
 ARG KERYX_NODE_REPO=https://github.com/Keryx-Labs/keryx-node.git
-ARG KERYX_NODE_REF=master
+ARG KERYX_NODE_REF=v1.3.1-OPoI
 
 FROM rust:1-bookworm AS builder
 

@@ -31,9 +31,12 @@ Build the image:
 docker compose build
 ```
 
-The default miner release is `v0.3.5-OPoI`. Override it in `.env` with
+The default miner release is `v0.3.6-OPoI`. Override it in `.env` with
 `KERYX_MINER_VERSION` and the matching `KERYX_MINER_SHA256` if you want a
 different upstream release.
+
+For the H3 hard fork release line, pair miner `v0.3.6-OPoI` with node
+`v1.3.1-OPoI`.
 
 ## Build, Push, And Run
 
@@ -48,8 +51,8 @@ and rotate any token that has been shared outside your password manager.
 GHCR_PAT=<your_github_token>
 echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
 
-KERYX_MINER_VERSION=v0.3.5-OPoI
-KERYX_MINER_SHA256=c9770a52a7c41c4e17b20cb643b5e5c13e40b8bda9293a7d04e95c866c644b93
+KERYX_MINER_VERSION=v0.3.6-OPoI
+KERYX_MINER_SHA256=f107d3d81d797836badeb9f79eca4486caa6947da40cd3ea1ae9bf6ab7d131f9
 
 docker build --platform linux/amd64 \
   -t keryx-miner:${KERYX_MINER_VERSION} \
@@ -71,8 +74,8 @@ SHA for `KERYX_NODE_REF` when you want reproducible fleet deployments.
 GHCR_PAT=<your_github_token>
 echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
 
-KERYX_NODE_REF=master
-KERYX_NODE_IMAGE_TAG=master
+KERYX_NODE_REF=v1.3.1-OPoI
+KERYX_NODE_IMAGE_TAG=v1.3.1-OPoI
 
 docker build --platform linux/amd64 \
   -f Dockerfile.node \
@@ -94,7 +97,7 @@ P2P only where needed for node connectivity.
 GHCR_PAT=<your_github_token>
 echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
 
-KERYX_NODE_IMAGE_TAG=master
+KERYX_NODE_IMAGE_TAG=v1.3.1-OPoI
 docker pull ghcr.io/joeasycompute/keryx-node:${KERYX_NODE_IMAGE_TAG} &&
 docker rm -f keryx-node 2>/dev/null || true
 
@@ -176,7 +179,7 @@ Use this form on hosts that expect the NVIDIA CDI device syntax.
 GHCR_PAT=<your_github_token>
 echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
 
-KERYX_MINER_VERSION=v0.3.5-OPoI
+KERYX_MINER_VERSION=v0.3.6-OPoI
 docker pull ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION} &&
 docker rm -f keryx-miner 2>/dev/null || true
 
@@ -206,7 +209,7 @@ Use this form on ordinary Docker hosts with NVIDIA Container Toolkit.
 GHCR_PAT=<your_github_token>
 echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
 
-KERYX_MINER_VERSION=v0.3.5-OPoI
+KERYX_MINER_VERSION=v0.3.6-OPoI
 docker pull ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION} &&
 docker rm -f keryx-miner 2>/dev/null || true
 
@@ -245,7 +248,7 @@ docker rm -f keryx-miner
 ### Run On Specific GPUs
 
 ```sh
-KERYX_MINER_VERSION=v0.3.5-OPoI
+KERYX_MINER_VERSION=v0.3.6-OPoI
 
 docker run -d --restart unless-stopped \
   --gpus '"device=0,1,2,3,4,5,7"' \
@@ -369,7 +372,7 @@ The bridge exposes stratum on port `5555`. GPU hosts can then use:
 For direct node mode:
 
 ```sh
-KERYX_MINER_VERSION=v0.3.5-OPoI
+KERYX_MINER_VERSION=v0.3.6-OPoI
 docker pull ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION} &&
 docker rm -f keryx-miner 2>/dev/null || true
 
@@ -463,7 +466,7 @@ Set these in `.env`:
 | `KERYX_POOL_PORT` | empty | Stratum pool port used with `KERYX_POOL_HOST`. |
 | `KERYX_ALLOW_LOCAL_KERYXD_DEFAULT` | `false` | Set `true` only to allow the upstream container-local `127.0.0.1` default. |
 | `KERYX_INFERENCE_TIER` | `default` | Use `default`, `light`, `high`, or `very-high`. |
-| `KERYX_NO_OPOI` | `false` | `true` exits with a clear error because `v0.3.5-OPoI` has no `--no-opoi` flag. |
+| `KERYX_NO_OPOI` | `false` | `true` exits with a clear error because the OPoI miner release has no `--no-opoi` flag. |
 | `KERYX_ESCROW_KEY_FILE` | `/data/escrow.key` | Escrow key path inside the container. |
 | `KERYX_ESCROW_STATE_FILE` | `/data/escrow_state.json` | Escrow state path inside the container. |
 | `KERYX_EXTRA_ARGS` | empty | Extra flags appended to the miner command. |
@@ -584,7 +587,7 @@ miner build, use `Dockerfile.source`:
 
 ```sh
 docker build -f Dockerfile.source \
-  --build-arg KERYX_MINER_REF=v0.3.5-OPoI \
+  --build-arg KERYX_MINER_REF=v0.3.6-OPoI \
   --build-arg CUDA_COMPUTE_CAP=89 \
   -t keryx-miner:source .
 ```

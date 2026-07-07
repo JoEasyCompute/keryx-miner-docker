@@ -3,8 +3,8 @@ services:
     build:
       context: .
       args:
-        KERYX_MINER_VERSION: ${KERYX_MINER_VERSION:-v0.3.5-OPoI}
-        KERYX_MINER_SHA256: ${KERYX_MINER_SHA256:-c9770a52a7c41c4e17b20cb643b5e5c13e40b8bda9293a7d04e95c866c644b93}
+        KERYX_MINER_VERSION: ${KERYX_MINER_VERSION:-v0.3.6-OPoI}
+        KERYX_MINER_SHA256: ${KERYX_MINER_SHA256:-f107d3d81d797836badeb9f79eca4486caa6947da40cd3ea1ae9bf6ab7d131f9}
         KERYX_IMAGE_PLATFORM: linux/amd64
     image: keryx-miner:local
     platform: linux/amd64
