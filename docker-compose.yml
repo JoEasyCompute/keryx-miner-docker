@@ -9,6 +9,7 @@ services:
     image: keryx-miner:local
     platform: linux/amd64
     restart: unless-stopped
+    privileged: ${KERYX_GPU_TUNING_PRIVILEGED:-false}
     environment:
       MINING_ADDRESS: ${MINING_ADDRESS:?Set MINING_ADDRESS in .env}
       KERYX_INFERENCE_TIER: ${KERYX_INFERENCE_TIER:-default}

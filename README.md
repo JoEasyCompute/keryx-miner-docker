@@ -117,6 +117,13 @@ docker run -d --restart unless-stopped --gpus all \
   ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION}
 ```
 
+To apply GPU presets for real on a trusted self-managed host, change
+`KERYX_GPU_PRESETS_DRY_RUN=false`. If the NVIDIA driver reports
+`Insufficient Permissions` for `nvidia-smi -pl`, `-lgc`, or `-lmc`, recreate
+the container with Docker privileges, for example by adding `--privileged` to
+the `docker run` command. Hosted GPU providers may block these controls; keep
+dry-run enabled there and apply clocks through the provider or host OS instead.
+
 View logs:
 
 ```sh
@@ -236,6 +243,10 @@ docker run -d --restart unless-stopped --gpus all \
   ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION}
 ```
 
+Set `KERYX_GPU_PRESETS_DRY_RUN=false` only after confirming the commands in the
+logs. If the host rejects power or clock changes, add `--privileged` on trusted
+self-managed GPU servers, or leave tuning to the host/provider.
+
 For bridge mode, replace `KERYX_NODE_URL` with:
 
 ```sh
@@ -329,6 +340,14 @@ docker run --rm --gpus all keryx-miner:local \
 The container can apply GPU tuning before the miner starts when
 `KERYX_GPU_TUNING=true`. This uses `nvidia-smi`, so the host must allow the
 container to control the GPUs through the NVIDIA Container Toolkit.
+
+The examples default to `KERYX_GPU_PRESETS_DRY_RUN=true` so a fleet rollout can
+verify matches without changing clocks. To apply settings, set
+`KERYX_GPU_PRESETS_DRY_RUN=false`. On self-managed hosts where the driver still
+rejects `nvidia-smi` power or clock changes from Docker, run the miner container
+with `--privileged`, or set `KERYX_GPU_TUNING_PRIVILEGED=true` when using
+`docker compose`. Do not enable privileged containers on shared or untrusted
+hosts.
 
 Built-in presets:
 
