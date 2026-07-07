@@ -3,8 +3,9 @@
 Docker image for mining Keryx (KRX) with the official
 [`Keryx-Labs/keryx-miner`](https://github.com/Keryx-Labs/keryx-miner) miner.
 
-The default image installs the official Linux amd64 release binary and its
-`libkeryx*.so` plugin libraries into an NVIDIA CUDA 12.2 runtime image.
+The default image installs the official Linux amd64 release binary and keeps its
+`libkeryx*.so` plugin libraries beside the binary, because the miner discovers
+workers by scanning its current directory.
 
 ## Requirements
 
@@ -169,11 +170,19 @@ docker compose down
 ```
 
 The image uses `/data` for persistent runtime state. Keep a volume mounted there
-so OPoI model downloads and `escrow.key` survive container recreation.
+so OPoI model downloads plus `escrow.key` and `escrow_state.json` survive
+container recreation. The miner starts from `/opt/keryx/bin` so it can discover
+its GPU worker plugins; only the model directory and escrow file paths are
+redirected into `/data`.
 
 Default OPoI mode downloads multi-GB model files on first startup. This can make
-the container look idle for a while even though it is still running. To skip the
-model download and mine PoW-only, set `KERYX_NO_OPOI=true`.
+the container look idle for a while even though it is still running.
+
+The miner also needs a reachable `keryxd` node. Upstream defaults to
+`127.0.0.1:22110`, which means "inside the container". If your `keryxd` runs on
+the Docker host, add `--add-host=host.docker.internal:host-gateway` to
+`docker run` and set `KERYXD_ADDRESS=host.docker.internal`. If it runs on
+another machine, set `KERYXD_ADDRESS` to that host or IP.
 
 ## Runtime Configuration
 
@@ -182,8 +191,12 @@ Set these in `.env`:
 | Variable | Default | Description |
 | --- | --- | --- |
 | `MINING_ADDRESS` | required | Keryx address passed as `--mining-address`. |
+| `KERYXD_ADDRESS` | upstream default | Optional keryxd host passed as `--keryxd-address`. |
+| `KERYXD_PORT` | upstream default | Optional keryxd port passed as `--port`. |
 | `KERYX_INFERENCE_TIER` | `default` | Use `default`, `light`, `high`, or `very-high`. |
-| `KERYX_NO_OPOI` | `false` | Set `true` for PoW-only mining with `--no-opoi`. |
+| `KERYX_NO_OPOI` | `false` | `true` exits with a clear error because `v0.3.5-OPoI` has no `--no-opoi` flag. |
+| `KERYX_ESCROW_KEY_FILE` | `/data/escrow.key` | Escrow key path inside the container. |
+| `KERYX_ESCROW_STATE_FILE` | `/data/escrow_state.json` | Escrow state path inside the container. |
 | `KERYX_EXTRA_ARGS` | empty | Extra flags appended to the miner command. |
 | `NVIDIA_VISIBLE_DEVICES` | `all` | Select all GPUs or a comma-separated list such as `0,1`. |
 

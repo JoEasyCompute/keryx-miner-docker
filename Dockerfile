@@ -24,14 +24,14 @@ RUN curl -fsSL \
     && echo "${KERYX_MINER_SHA256}  keryx-miner.zip" | sha256sum -c - \
     && unzip keryx-miner.zip \
     && install -D -m 0755 keryx-miner /opt/keryx/bin/keryx-miner \
-    && install -D -m 0644 libkeryxcuda.so /opt/keryx/lib/libkeryxcuda.so \
-    && install -D -m 0644 libkeryxopencl.so /opt/keryx/lib/libkeryxopencl.so
+    && install -D -m 0644 libkeryxcuda.so /opt/keryx/bin/libkeryxcuda.so \
+    && install -D -m 0644 libkeryxopencl.so /opt/keryx/bin/libkeryxopencl.so
 
 FROM --platform=${KERYX_IMAGE_PLATFORM} nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_VERSION} AS runtime
 
 ENV NVIDIA_VISIBLE_DEVICES=all \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility \
-    LD_LIBRARY_PATH=/opt/keryx/lib:$LD_LIBRARY_PATH \
+    LD_LIBRARY_PATH=/opt/keryx/bin:/opt/keryx/lib:$LD_LIBRARY_PATH \
     PATH=/opt/keryx/bin:$PATH
 
 RUN apt-get update \
@@ -51,7 +51,7 @@ RUN mkdir -p /data \
     && rm -rf /opt/keryx/bin/models \
     && ln -s /data/models /opt/keryx/bin/models
 
-WORKDIR /data
+WORKDIR /opt/keryx/bin
 VOLUME ["/data"]
 
 ENTRYPOINT ["keryx-entrypoint"]

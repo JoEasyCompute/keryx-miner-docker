@@ -23,10 +23,22 @@ mkdir -p /data/models
 
 keryx-gpu-tune
 
-set -- --mining-address "$MINING_ADDRESS"
+set -- \
+  --mining-address "$MINING_ADDRESS" \
+  --escrow-key-file "${KERYX_ESCROW_KEY_FILE:-/data/escrow.key}" \
+  --escrow-state-file "${KERYX_ESCROW_STATE_FILE:-/data/escrow_state.json}"
 
 if [ "${KERYX_NO_OPOI:-}" = "1" ] || [ "${KERYX_NO_OPOI:-}" = "true" ]; then
-  set -- "$@" --no-opoi
+  echo "KERYX_NO_OPOI is not supported by keryx-miner v0.3.5-OPoI; this release has no --no-opoi flag." >&2
+  exit 64
+fi
+
+if [ -n "${KERYXD_ADDRESS:-}" ]; then
+  set -- "$@" --keryxd-address "$KERYXD_ADDRESS"
+fi
+
+if [ -n "${KERYXD_PORT:-}" ]; then
+  set -- "$@" --port "$KERYXD_PORT"
 fi
 
 if [ -n "${KERYX_INFERENCE_TIER:-}" ]; then

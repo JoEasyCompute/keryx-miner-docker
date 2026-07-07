@@ -36,13 +36,15 @@ WORKDIR /src
 RUN git clone --depth 1 --branch "${KERYX_MINER_REF}" "${KERYX_MINER_REPO}" .
 
 RUN cargo build --release --bin keryx-miner \
-    && install -D -m 0755 target/release/keryx-miner /opt/keryx/bin/keryx-miner
+    && install -D -m 0755 target/release/keryx-miner /opt/keryx/bin/keryx-miner \
+    && find target/release -maxdepth 2 -type f -name 'libkeryx*.so' \
+        -exec sh -c 'for file do install -D -m 0644 "$file" "/opt/keryx/bin/$(basename "$file")"; done' sh {} +
 
 FROM --platform=${KERYX_IMAGE_PLATFORM} nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_VERSION} AS runtime
 
 ENV NVIDIA_VISIBLE_DEVICES=all \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility \
-    LD_LIBRARY_PATH=/opt/keryx/lib:$LD_LIBRARY_PATH \
+    LD_LIBRARY_PATH=/opt/keryx/bin:/opt/keryx/lib:$LD_LIBRARY_PATH \
     PATH=/opt/keryx/bin:$PATH
 
 RUN apt-get update \
@@ -52,7 +54,7 @@ RUN apt-get update \
         libssl3 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /opt/keryx/bin/keryx-miner /opt/keryx/bin/keryx-miner
+COPY --from=builder /opt/keryx/bin /opt/keryx/bin
 COPY docker-entrypoint.sh /usr/local/bin/keryx-entrypoint
 COPY gpu-tune.sh /usr/local/bin/keryx-gpu-tune
 COPY gpu-presets.sh /opt/keryx/gpu-presets.sh
@@ -62,7 +64,7 @@ RUN mkdir -p /data \
     && rm -rf /opt/keryx/bin/models \
     && ln -s /data/models /opt/keryx/bin/models
 
-WORKDIR /data
+WORKDIR /opt/keryx/bin
 VOLUME ["/data"]
 
 ENTRYPOINT ["keryx-entrypoint"]
