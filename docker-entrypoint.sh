@@ -33,8 +33,31 @@ if [ "${KERYX_NO_OPOI:-}" = "1" ] || [ "${KERYX_NO_OPOI:-}" = "true" ]; then
   exit 64
 fi
 
+keryxd_port_from_url=""
+
 if [ -n "${KERYX_NODE_URL:-}" ]; then
-  set -- "$@" --keryxd-address "$KERYX_NODE_URL"
+  case "$KERYX_NODE_URL" in
+    grpc://*)
+      keryxd_endpoint="${KERYX_NODE_URL#grpc://}"
+      case "$keryxd_endpoint" in
+        *:*)
+          keryxd_host="${keryxd_endpoint%:*}"
+          keryxd_port_from_url="${keryxd_endpoint##*:}"
+          if [ -z "$keryxd_host" ] || [ -z "$keryxd_port_from_url" ]; then
+            echo "Invalid KERYX_NODE_URL: $KERYX_NODE_URL" >&2
+            exit 64
+          fi
+          set -- "$@" --keryxd-address "$keryxd_host"
+          ;;
+        *)
+          set -- "$@" --keryxd-address "$keryxd_endpoint"
+          ;;
+      esac
+      ;;
+    *)
+      set -- "$@" --keryxd-address "$KERYX_NODE_URL"
+      ;;
+  esac
 elif [ -n "${KERYX_POOL_HOST:-}" ]; then
   if [ -z "${KERYX_POOL_PORT:-}" ]; then
     echo "KERYX_POOL_PORT is required when KERYX_POOL_HOST is set." >&2
@@ -55,6 +78,8 @@ fi
 
 if [ -n "${KERYXD_PORT:-}" ]; then
   set -- "$@" --port "$KERYXD_PORT"
+elif [ -n "$keryxd_port_from_url" ]; then
+  set -- "$@" --port "$keryxd_port_from_url"
 fi
 
 if [ -n "${KERYX_INFERENCE_TIER:-}" ]; then

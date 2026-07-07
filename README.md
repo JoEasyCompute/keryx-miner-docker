@@ -492,7 +492,9 @@ the container look idle for a while even though it is still running.
 
 The miner also needs a reachable Keryx endpoint. Upstream defaults to
 `127.0.0.1:22110`, which means "inside the container", so this wrapper requires
-an explicit endpoint by default. Set one of:
+an explicit endpoint by default. For direct `keryxd` connections,
+`KERYX_NODE_URL=grpc://HOST:PORT` is parsed into the miner's
+`--keryxd-address HOST --port PORT` flags. Set one of:
 
 ```env
 KERYX_NODE_URL=grpc://YOUR_KERYXD_HOST:22110
@@ -519,7 +521,7 @@ Set these in `.env`:
 | Variable | Default | Description |
 | --- | --- | --- |
 | `MINING_ADDRESS` | required | Keryx address passed as `--mining-address`. |
-| `KERYX_NODE_URL` | required | Full endpoint passed as `--keryxd-address`, such as `grpc://HOST:22110` or `stratum+tcp://POOL:PORT`. |
+| `KERYX_NODE_URL` | required | Endpoint such as `grpc://HOST:22110` or `stratum+tcp://POOL:PORT`. Direct `grpc://` endpoints are split into `--keryxd-address HOST --port PORT`. |
 | `KERYXD_ADDRESS` | empty | Alternative keryxd host passed as `--keryxd-address`. |
 | `KERYXD_PORT` | empty | Optional keryxd port passed as `--port`; mainnet is usually `22110`. |
 | `KERYX_POOL_HOST` | empty | Alternative stratum pool host. Requires `KERYX_POOL_PORT`. |
@@ -537,7 +539,8 @@ You can also bypass the environment wrapper and pass a full miner command:
 ```sh
 docker run --rm --gpus all keryx-miner:local \
   --mining-address keryx:YOUR_ADDRESS \
-  --keryxd-address grpc://YOUR_KERYXD_HOST:22110
+  --keryxd-address YOUR_KERYXD_HOST \
+  --port 22110
 ```
 
 ## GPU Tuning
