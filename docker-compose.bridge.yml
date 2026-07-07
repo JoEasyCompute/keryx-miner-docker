@@ -1,6 +1,12 @@
 services:
   keryx-bridge:
-    image: ${KERYX_BRIDGE_IMAGE:-keryx-labs/keryx_bridge:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.bridge
+      args:
+        KERYX_BRIDGE_REPO: ${KERYX_BRIDGE_REPO:-https://github.com/Keryx-Labs/keryx-stratum-bridge.git}
+        KERYX_BRIDGE_REF: ${KERYX_BRIDGE_REF:-main}
+    image: ${KERYX_BRIDGE_IMAGE:-keryx-bridge:local}
     restart: unless-stopped
     command:
       - --log=${KERYX_BRIDGE_LOG:-false}

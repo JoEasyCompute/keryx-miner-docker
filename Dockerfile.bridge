@@ -1,0 +1,30 @@
+ARG KERYX_BRIDGE_REPO=https://github.com/Keryx-Labs/keryx-stratum-bridge.git
+ARG KERYX_BRIDGE_REF=main
+
+FROM golang:1.19.1 AS builder
+
+ARG KERYX_BRIDGE_REPO
+ARG KERYX_BRIDGE_REF
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+
+RUN git clone --depth 1 --branch "${KERYX_BRIDGE_REF}" "${KERYX_BRIDGE_REPO}" .
+
+RUN go mod download \
+    && go build -o /opt/keryx-bridge/bin/keryxbridge ./cmd/keryxbridge
+
+FROM gcr.io/distroless/base:nonroot AS runtime
+
+COPY --from=builder /opt/keryx-bridge/bin/keryxbridge /keryxbridge
+COPY --from=builder /src/cmd/keryxbridge/config.yaml /config.yaml
+
+WORKDIR /
+EXPOSE 5555 2114
+
+ENTRYPOINT ["/keryxbridge"]

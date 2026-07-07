@@ -203,7 +203,7 @@ endpoint for the fleet:
 
 ```sh
 KERYX_BRIDGE_KERYXD_ADDRESS=grpc://YOUR_KERYXD_HOST:22110 \
-docker compose -f docker-compose.bridge.yml up -d
+docker compose -f docker-compose.bridge.yml up -d --build
 ```
 
 The bridge exposes stratum on port `5555`. GPU hosts can then use:
