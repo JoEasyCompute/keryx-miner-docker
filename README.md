@@ -171,6 +171,10 @@ docker compose down
 The image uses `/data` for persistent runtime state. Keep a volume mounted there
 so OPoI model downloads and `escrow.key` survive container recreation.
 
+Default OPoI mode downloads multi-GB model files on first startup. This can make
+the container look idle for a while even though it is still running. To skip the
+model download and mine PoW-only, set `KERYX_NO_OPOI=true`.
+
 ## Runtime Configuration
 
 Set these in `.env`:
