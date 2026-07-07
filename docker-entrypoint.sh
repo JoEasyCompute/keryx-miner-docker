@@ -33,8 +33,24 @@ if [ "${KERYX_NO_OPOI:-}" = "1" ] || [ "${KERYX_NO_OPOI:-}" = "true" ]; then
   exit 64
 fi
 
-if [ -n "${KERYXD_ADDRESS:-}" ]; then
+if [ -n "${KERYX_NODE_URL:-}" ]; then
+  set -- "$@" --keryxd-address "$KERYX_NODE_URL"
+elif [ -n "${KERYX_POOL_HOST:-}" ]; then
+  if [ -z "${KERYX_POOL_PORT:-}" ]; then
+    echo "KERYX_POOL_PORT is required when KERYX_POOL_HOST is set." >&2
+    exit 64
+  fi
+  set -- "$@" --keryxd-address "stratum+tcp://${KERYX_POOL_HOST}:${KERYX_POOL_PORT}"
+elif [ -n "${KERYXD_ADDRESS:-}" ]; then
   set -- "$@" --keryxd-address "$KERYXD_ADDRESS"
+elif [ "${KERYX_ALLOW_LOCAL_KERYXD_DEFAULT:-}" = "1" ] || [ "${KERYX_ALLOW_LOCAL_KERYXD_DEFAULT:-}" = "true" ]; then
+  :
+else
+  echo "Keryx endpoint is required in Docker." >&2
+  echo "Set KERYX_NODE_URL to grpc://HOST:22110 or stratum+tcp://POOL:PORT." >&2
+  echo "Alternatively set KERYXD_ADDRESS/KERYXD_PORT or KERYX_POOL_HOST/KERYX_POOL_PORT." >&2
+  echo "Use KERYX_ALLOW_LOCAL_KERYXD_DEFAULT=true only if keryxd runs inside this same container." >&2
+  exit 64
 fi
 
 if [ -n "${KERYXD_PORT:-}" ]; then

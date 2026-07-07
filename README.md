@@ -80,6 +80,7 @@ docker run --rm \
   --name keryx-miner \
   -v keryx-data:/data \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
+  -e KERYX_NODE_URL=grpc://YOUR_KERYXD_HOST:22110 \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
   -e KERYX_GPU_PRESETS_URL=https://raw.githubusercontent.com/JoEasyCompute/keryx-miner-docker/main/examples/gpu-presets.csv \
@@ -107,6 +108,7 @@ docker run -d --restart unless-stopped --gpus all \
   --name keryx-miner \
   -v keryx-data:/data \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
+  -e KERYX_NODE_URL=grpc://YOUR_KERYXD_HOST:22110 \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
   -e KERYX_GPU_PRESETS_URL=https://raw.githubusercontent.com/JoEasyCompute/keryx-miner-docker/main/examples/gpu-presets.csv \
@@ -137,6 +139,7 @@ docker run -d --restart unless-stopped \
   --name keryx-miner \
   -v keryx-data:/data \
   -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
+  -e KERYX_NODE_URL=grpc://YOUR_KERYXD_HOST:22110 \
   -e KERYX_INFERENCE_TIER=default \
   -e KERYX_NO_OPOI=false \
   -e KERYX_GPU_PRESETS_URL=https://raw.githubusercontent.com/JoEasyCompute/keryx-miner-docker/main/examples/gpu-presets.csv \
@@ -178,11 +181,27 @@ redirected into `/data`.
 Default OPoI mode downloads multi-GB model files on first startup. This can make
 the container look idle for a while even though it is still running.
 
-The miner also needs a reachable `keryxd` node. Upstream defaults to
-`127.0.0.1:22110`, which means "inside the container". If your `keryxd` runs on
-the Docker host, add `--add-host=host.docker.internal:host-gateway` to
-`docker run` and set `KERYXD_ADDRESS=host.docker.internal`. If it runs on
-another machine, set `KERYXD_ADDRESS` to that host or IP.
+The miner also needs a reachable Keryx endpoint. Upstream defaults to
+`127.0.0.1:22110`, which means "inside the container", so this wrapper requires
+an explicit endpoint by default. Set one of:
+
+```env
+KERYX_NODE_URL=grpc://YOUR_KERYXD_HOST:22110
+# or
+KERYX_NODE_URL=stratum+tcp://YOUR_POOL_HOST:YOUR_POOL_PORT
+# or
+KERYXD_ADDRESS=YOUR_KERYXD_HOST
+KERYXD_PORT=22110
+# or
+KERYX_POOL_HOST=YOUR_POOL_HOST
+KERYX_POOL_PORT=YOUR_POOL_PORT
+```
+
+If `keryxd` runs on the Docker host, add
+`--add-host=host.docker.internal:host-gateway` to `docker run` and set
+`KERYX_NODE_URL=grpc://host.docker.internal:22110`. Use
+`KERYX_ALLOW_LOCAL_KERYXD_DEFAULT=true` only if `keryxd` runs inside this same
+container.
 
 ## Runtime Configuration
 
@@ -191,8 +210,12 @@ Set these in `.env`:
 | Variable | Default | Description |
 | --- | --- | --- |
 | `MINING_ADDRESS` | required | Keryx address passed as `--mining-address`. |
-| `KERYXD_ADDRESS` | upstream default | Optional keryxd host passed as `--keryxd-address`. |
-| `KERYXD_PORT` | upstream default | Optional keryxd port passed as `--port`. |
+| `KERYX_NODE_URL` | required | Full endpoint passed as `--keryxd-address`, such as `grpc://HOST:22110` or `stratum+tcp://POOL:PORT`. |
+| `KERYXD_ADDRESS` | empty | Alternative keryxd host passed as `--keryxd-address`. |
+| `KERYXD_PORT` | empty | Optional keryxd port passed as `--port`; mainnet is usually `22110`. |
+| `KERYX_POOL_HOST` | empty | Alternative stratum pool host. Requires `KERYX_POOL_PORT`. |
+| `KERYX_POOL_PORT` | empty | Stratum pool port used with `KERYX_POOL_HOST`. |
+| `KERYX_ALLOW_LOCAL_KERYXD_DEFAULT` | `false` | Set `true` only to allow the upstream container-local `127.0.0.1` default. |
 | `KERYX_INFERENCE_TIER` | `default` | Use `default`, `light`, `high`, or `very-high`. |
 | `KERYX_NO_OPOI` | `false` | `true` exits with a clear error because `v0.3.5-OPoI` has no `--no-opoi` flag. |
 | `KERYX_ESCROW_KEY_FILE` | `/data/escrow.key` | Escrow key path inside the container. |
@@ -204,7 +227,8 @@ You can also bypass the environment wrapper and pass a full miner command:
 
 ```sh
 docker run --rm --gpus all keryx-miner:local \
-  --mining-address keryx:YOUR_ADDRESS --no-opoi
+  --mining-address keryx:YOUR_ADDRESS \
+  --keryxd-address grpc://YOUR_KERYXD_HOST:22110
 ```
 
 ## GPU Tuning
