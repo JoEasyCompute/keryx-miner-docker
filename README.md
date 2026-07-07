@@ -296,6 +296,42 @@ gpu servers -> stratum+tcp://bridge-host:5555 -> keryxd
 Do not expose node or bridge ports broadly on the public internet. Restrict
 access with firewall rules or a private overlay network.
 
+### Control Node With Bridge
+
+Use this on the control-plane machine when you want one host to run both the
+central `keryxd` node and the stratum bridge. In this compose file, the bridge
+talks to the node through Docker DNS at `grpc://keryx-node:22110`.
+
+```sh
+docker compose -f docker-compose.control.yml up -d --build
+docker compose -f docker-compose.control.yml logs -f keryx-node keryx-bridge
+```
+
+The control host publishes:
+
+| Port | Service | Purpose |
+| --- | --- | --- |
+| `22110` | `keryx-node` | Mainnet gRPC for direct miner connections or bridge access. |
+| `22111` | `keryx-node` | Mainnet P2P. |
+| `5555` | `keryx-bridge` | Stratum endpoint for GPU miners. |
+| `2114` | `keryx-bridge` | Prometheus metrics when bridge metrics are enabled. |
+
+GPU servers can point at the control host directly:
+
+```sh
+-e KERYX_NODE_URL=grpc://YOUR_CONTROL_NODE_HOST:22110
+```
+
+Or point at the bridge on the same control host:
+
+```sh
+-e KERYX_NODE_URL=stratum+tcp://YOUR_CONTROL_NODE_HOST:5555
+```
+
+If the bridge runs on a different machine from the node, set
+`KERYX_BRIDGE_KERYXD_ADDRESS=grpc://YOUR_KERYXD_HOST:22110` before starting the
+bridge.
+
 ### Central Node
 
 Build and run a central `keryxd` node:

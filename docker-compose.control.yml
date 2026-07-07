@@ -1,0 +1,47 @@
+services:
+  keryx-node:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+      args:
+        KERYX_NODE_REPO: ${KERYX_NODE_REPO:-https://github.com/Keryx-Labs/keryx-node.git}
+        KERYX_NODE_REF: ${KERYX_NODE_REF:-master}
+    image: ${KERYX_NODE_IMAGE:-keryx-node:local}
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      KERYXD_APPDIR: ${KERYXD_APPDIR:-/data}
+      KERYXD_RPCLISTEN: ${KERYXD_RPCLISTEN:-0.0.0.0:22110}
+      KERYXD_LISTEN: ${KERYXD_LISTEN:-0.0.0.0:22111}
+      KERYXD_LOG_LEVEL: ${KERYXD_LOG_LEVEL:-info}
+      KERYXD_EXTRA_ARGS: ${KERYXD_EXTRA_ARGS:-}
+    volumes:
+      - keryx-node-data:/data
+    ports:
+      - "${KERYX_NODE_GRPC_PORT:-22110}:22110"
+      - "${KERYX_NODE_P2P_PORT:-22111}:22111"
+      - "${KERYX_NODE_TESTNET_GRPC_PORT:-22210}:22210"
+      - "${KERYX_NODE_TESTNET_P2P_PORT:-22211}:22211"
+
+  keryx-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile.bridge
+      args:
+        KERYX_BRIDGE_REPO: ${KERYX_BRIDGE_REPO:-https://github.com/Keryx-Labs/keryx-stratum-bridge.git}
+        KERYX_BRIDGE_REF: ${KERYX_BRIDGE_REF:-main}
+    image: ${KERYX_BRIDGE_IMAGE:-keryx-bridge:local}
+    restart: unless-stopped
+    depends_on:
+      - keryx-node
+    command:
+      - --log=${KERYX_BRIDGE_LOG:-false}
+      - --keryxd=${KERYX_BRIDGE_KERYXD_ADDRESS:-grpc://keryx-node:22110}
+      - --stats=${KERYX_BRIDGE_STATS:-false}
+      - --prom=${KERYX_BRIDGE_PROM_PORT:-2114}
+    ports:
+      - "${KERYX_BRIDGE_STRATUM_PORT:-5555}:5555"
+      - "${KERYX_BRIDGE_PROM_PORT:-2114}:2114"
+
+volumes:
+  keryx-node-data:
