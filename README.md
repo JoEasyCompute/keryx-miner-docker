@@ -62,6 +62,112 @@ docker tag keryx-miner:${KERYX_MINER_VERSION} \
 docker push ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION}
 ```
 
+### Build And Push Keryx Node To GHCR
+
+Build this image for the central `keryxd` node host. Use an immutable commit
+SHA for `KERYX_NODE_REF` when you want reproducible fleet deployments.
+
+```sh
+GHCR_PAT=<your_github_token>
+echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
+
+KERYX_NODE_REF=master
+KERYX_NODE_IMAGE_TAG=master
+
+docker build --platform linux/amd64 \
+  -f Dockerfile.node \
+  -t keryx-node:${KERYX_NODE_IMAGE_TAG} \
+  --build-arg KERYX_NODE_REF=${KERYX_NODE_REF} .
+
+docker tag keryx-node:${KERYX_NODE_IMAGE_TAG} \
+  ghcr.io/joeasycompute/keryx-node:${KERYX_NODE_IMAGE_TAG}
+
+docker push ghcr.io/joeasycompute/keryx-node:${KERYX_NODE_IMAGE_TAG}
+```
+
+### Run Keryx Node From GHCR
+
+Run this on the central node server. Expose gRPC only to your GPU servers and
+P2P only where needed for node connectivity.
+
+```sh
+GHCR_PAT=<your_github_token>
+echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
+
+KERYX_NODE_IMAGE_TAG=master
+docker pull ghcr.io/joeasycompute/keryx-node:${KERYX_NODE_IMAGE_TAG} &&
+docker rm -f keryx-node 2>/dev/null || true
+
+docker run -d --restart unless-stopped \
+  --name keryx-node \
+  -v keryx-node-data:/data \
+  -p 22110:22110 \
+  -p 22111:22111 \
+  -e KERYXD_APPDIR=/data \
+  -e KERYXD_RPCLISTEN=0.0.0.0:22110 \
+  -e KERYXD_LISTEN=0.0.0.0:22111 \
+  ghcr.io/joeasycompute/keryx-node:${KERYX_NODE_IMAGE_TAG}
+```
+
+For testnet, also publish `22210` and `22211`, then set:
+
+```sh
+-e KERYXD_EXTRA_ARGS=--testnet
+```
+
+### Build And Push Keryx Bridge To GHCR
+
+Build this image when you want a stratum endpoint in front of the central
+`keryxd` node.
+
+```sh
+GHCR_PAT=<your_github_token>
+echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
+
+KERYX_BRIDGE_REF=main
+KERYX_BRIDGE_IMAGE_TAG=main
+
+docker build --platform linux/amd64 \
+  -f Dockerfile.bridge \
+  -t keryx-bridge:${KERYX_BRIDGE_IMAGE_TAG} \
+  --build-arg KERYX_BRIDGE_REF=${KERYX_BRIDGE_REF} .
+
+docker tag keryx-bridge:${KERYX_BRIDGE_IMAGE_TAG} \
+  ghcr.io/joeasycompute/keryx-bridge:${KERYX_BRIDGE_IMAGE_TAG}
+
+docker push ghcr.io/joeasycompute/keryx-bridge:${KERYX_BRIDGE_IMAGE_TAG}
+```
+
+### Run Keryx Bridge From GHCR
+
+Run this near the node when miners should connect to stratum instead of direct
+gRPC.
+
+```sh
+GHCR_PAT=<your_github_token>
+echo "$GHCR_PAT" | docker login ghcr.io -u joeasycompute --password-stdin
+
+KERYX_BRIDGE_IMAGE_TAG=main
+docker pull ghcr.io/joeasycompute/keryx-bridge:${KERYX_BRIDGE_IMAGE_TAG} &&
+docker rm -f keryx-bridge 2>/dev/null || true
+
+docker run -d --restart unless-stopped \
+  --name keryx-bridge \
+  -p 5555:5555 \
+  -p 2114:2114 \
+  ghcr.io/joeasycompute/keryx-bridge:${KERYX_BRIDGE_IMAGE_TAG} \
+  --log=false \
+  --keryxd=grpc://YOUR_KERYXD_HOST:22110 \
+  --stats=false \
+  --prom=2114
+```
+
+GPU miners can then use:
+
+```sh
+-e KERYX_NODE_URL=stratum+tcp://YOUR_BRIDGE_HOST:5555
+```
+
 ### Vast Host Docker Run
 
 Use this form on hosts that expect the NVIDIA CDI device syntax.
