@@ -4,8 +4,9 @@ Docker image for mining Keryx (KRX) with the official
 [`Keryx-Labs/keryx-miner`](https://github.com/Keryx-Labs/keryx-miner) miner.
 
 The default image installs the official Linux amd64 release binary and keeps its
-`libkeryx*.so` plugin libraries beside the binary, because the miner discovers
-workers by scanning its current directory.
+GPU worker plugin libraries beside the binary, because the miner discovers
+workers by scanning its current directory. Miner `v0.3.6-OPoI` is CUDA-only and
+does not ship the old OpenCL/AMD plugin.
 
 ## Requirements
 

@@ -25,7 +25,9 @@ RUN curl -fsSL \
     && unzip keryx-miner.zip \
     && install -D -m 0755 keryx-miner /opt/keryx/bin/keryx-miner \
     && install -D -m 0644 libkeryxcuda.so /opt/keryx/bin/libkeryxcuda.so \
-    && install -D -m 0644 libkeryxopencl.so /opt/keryx/bin/libkeryxopencl.so
+    && if [ -f libkeryxopencl.so ]; then \
+        install -D -m 0644 libkeryxopencl.so /opt/keryx/bin/libkeryxopencl.so; \
+    fi
 
 FROM --platform=${KERYX_IMAGE_PLATFORM} nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_VERSION} AS runtime
 
