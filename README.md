@@ -39,6 +39,10 @@ different upstream release.
 For the H3 hard fork release line, pair miner `v0.3.6-OPoI` with node
 `v1.3.1-OPoI`.
 
+For detailed control-node operations, sync-stage interpretation, and moving a
+synced node volume to another host, see
+[docs/control-node-runbook.md](docs/control-node-runbook.md).
+
 ## Build, Push, And Run
 
 These examples mirror the operational flow used by `pearl-docker-alpha`, but
