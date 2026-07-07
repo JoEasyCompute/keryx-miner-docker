@@ -152,6 +152,96 @@ CSV presets match all GPUs visible to `nvidia-smi`; use Docker's
 `--gpus '"device=..."'` flag to restrict visibility for both mining and preset
 matching.
 
+## Fleet Deployment
+
+For multiple GPU servers, run the Keryx node once on a central server and keep
+the GPU hosts as miner-only workers. This is especially useful when your
+`keryxd` node sits in a different network: route miners to that private endpoint
+over your VPN, private WAN, Tailscale/WireGuard, or site-to-site link instead of
+running a node on every rig.
+
+Recommended topology:
+
+```text
+keryx-node network:
+  keryxd central node
+  optional keryx-stratum-bridge
+
+gpu network:
+  gpu-server-01 -> grpc://central-node:22110
+  gpu-server-02 -> grpc://central-node:22110
+  gpu-server-03 -> grpc://central-node:22110
+```
+
+If direct gRPC from every GPU host to the node is inconvenient, run the stratum
+bridge near the node and point miners at the bridge:
+
+```text
+gpu servers -> stratum+tcp://bridge-host:5555 -> keryxd
+```
+
+Do not expose node or bridge ports broadly on the public internet. Restrict
+access with firewall rules or a private overlay network.
+
+### Central Node
+
+Build and run a central `keryxd` node:
+
+```sh
+docker compose -f docker-compose.node.yml up -d --build
+docker compose -f docker-compose.node.yml logs -f keryx-node
+```
+
+The node compose file persists data in the `keryx-node-data` volume and exposes
+mainnet gRPC on host port `22110`. If the node runs in another network, expose
+that port only to your GPU servers.
+
+### Optional Stratum Bridge
+
+Run this on the node side of the network when you prefer a single stratum
+endpoint for the fleet:
+
+```sh
+KERYX_BRIDGE_KERYXD_ADDRESS=grpc://YOUR_KERYXD_HOST:22110 \
+docker compose -f docker-compose.bridge.yml up -d
+```
+
+The bridge exposes stratum on port `5555`. GPU hosts can then use:
+
+```sh
+-e KERYX_NODE_URL=stratum+tcp://YOUR_BRIDGE_HOST:5555
+```
+
+### GPU Server Template
+
+For direct node mode:
+
+```sh
+KERYX_MINER_VERSION=v0.3.5-OPoI
+docker pull ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION} &&
+docker rm -f keryx-miner 2>/dev/null || true
+
+docker run -d --restart unless-stopped --gpus all \
+  --name keryx-miner \
+  -v keryx-data:/data \
+  -e MINING_ADDRESS=keryx:YOUR_ADDRESS \
+  -e KERYX_NODE_URL=grpc://YOUR_KERYXD_HOST:22110 \
+  -e KERYX_INFERENCE_TIER=default \
+  -e KERYX_GPU_PRESETS_URL=https://raw.githubusercontent.com/JoEasyCompute/keryx-miner-docker/main/examples/gpu-presets.csv \
+  -e KERYX_GPU_PRESETS_SHA256=f5af787dde5e8558c13db2202c5c0b63de6d68b74ce647288fd77c5b87debab6 \
+  -e KERYX_GPU_PRESETS_DRY_RUN=true \
+  ghcr.io/joeasycompute/keryx-miner:${KERYX_MINER_VERSION}
+```
+
+For bridge mode, replace `KERYX_NODE_URL` with:
+
+```sh
+-e KERYX_NODE_URL=stratum+tcp://YOUR_BRIDGE_HOST:5555
+```
+
+Use [examples/fleet.env](examples/fleet.env) as the baseline environment file
+for rolling the same settings across multiple GPU servers.
+
 ## Run
 
 Start mining with Compose:

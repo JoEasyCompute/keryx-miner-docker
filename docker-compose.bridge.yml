@@ -1,0 +1,12 @@
+services:
+  keryx-bridge:
+    image: ${KERYX_BRIDGE_IMAGE:-keryx-labs/keryx_bridge:latest}
+    restart: unless-stopped
+    command:
+      - --log=${KERYX_BRIDGE_LOG:-false}
+      - --keryxd=${KERYX_BRIDGE_KERYXD_ADDRESS:?Set KERYX_BRIDGE_KERYXD_ADDRESS, for example grpc://keryx-node.example.net:22110}
+      - --stats=${KERYX_BRIDGE_STATS:-false}
+      - --prom=${KERYX_BRIDGE_PROM_PORT:-2114}
+    ports:
+      - "${KERYX_BRIDGE_STRATUM_PORT:-5555}:5555"
+      - "${KERYX_BRIDGE_PROM_PORT:-2114}:2114"

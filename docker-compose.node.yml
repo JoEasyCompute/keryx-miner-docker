@@ -1,0 +1,21 @@
+services:
+  keryx-node:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+      args:
+        KERYX_NODE_REPO: ${KERYX_NODE_REPO:-https://github.com/Keryx-Labs/keryx-node.git}
+        KERYX_NODE_REF: ${KERYX_NODE_REF:-master}
+    image: ${KERYX_NODE_IMAGE:-keryx-node:local}
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      KERYXD_EXTRA_ARGS: ${KERYXD_EXTRA_ARGS:-}
+    volumes:
+      - keryx-node-data:/data
+    ports:
+      - "${KERYX_NODE_GRPC_PORT:-22110}:22110"
+      - "${KERYX_NODE_TESTNET_GRPC_PORT:-22211}:22211"
+
+volumes:
+  keryx-node-data:

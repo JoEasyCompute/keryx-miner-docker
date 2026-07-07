@@ -1,0 +1,58 @@
+ARG DEBIAN_VERSION=bookworm
+ARG KERYX_NODE_REPO=https://github.com/Keryx-Labs/keryx-node.git
+ARG KERYX_NODE_REF=master
+
+FROM rust:1-bookworm AS builder
+
+ARG KERYX_NODE_REPO
+ARG KERYX_NODE_REF
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        clang \
+        curl \
+        git \
+        libclang-dev \
+        libprotobuf-dev \
+        libssl-dev \
+        pkg-config \
+        protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN rustup target add wasm32-unknown-unknown \
+    && cargo install wasm-pack
+
+WORKDIR /src
+
+RUN git clone --depth 1 --branch "${KERYX_NODE_REF}" "${KERYX_NODE_REPO}" .
+
+RUN cargo build --release --bin keryxd \
+    && install -D -m 0755 target/release/keryxd /opt/keryx-node/bin/keryxd
+
+FROM debian:${DEBIAN_VERSION}-slim AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PATH=/opt/keryx-node/bin:$PATH
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/keryx-node /opt/keryx-node
+COPY keryxd-entrypoint.sh /usr/local/bin/keryxd-entrypoint
+
+RUN chmod +x /usr/local/bin/keryxd-entrypoint \
+    && mkdir -p /data
+
+WORKDIR /data
+VOLUME ["/data"]
+
+EXPOSE 22110 22211
+
+ENTRYPOINT ["keryxd-entrypoint"]
